@@ -596,11 +596,11 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
-(function() {
-  'use strict';
+(function () {
+  "use strict";
 
-  var FrameSink = require('./FrameSink.js'),
-    shaders = require('../build/shaders.js');
+  var FrameSink = require("./FrameSink.js"),
+    shaders = require("../build/shaders.js");
 
   /**
    * Warning: canvas must not have been used for 2d drawing prior!
@@ -608,13 +608,14 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
    * @param {HTMLCanvasElement} canvas - HTML canvas element to attach to
    * @constructor
    */
-  function WebGLFrameSink(canvas) {
+  function WebGLFrameSink(canvas, options) {
+    options = options || {};
     var self = this,
       gl = WebGLFrameSink.contextForCanvas(canvas),
       debug = false; // swap this to enable more error checks, which can slow down rendering
 
     if (gl === null) {
-      throw new Error('WebGL unavailable');
+      throw new Error("WebGL unavailable");
     }
 
     // GL!
@@ -622,7 +623,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       if (debug) {
         err = gl.getError();
         if (err !== 0) {
-          throw new Error('GL error ' + err);
+          throw new Error("GL error " + err);
         }
       }
     }
@@ -636,7 +637,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         var err = gl.getShaderInfoLog(shader);
         gl.deleteShader(shader);
         throw new Error(
-          'GL shader compilation for ' + type + ' failed: ' + err
+          "GL shader compilation for " + type + " failed: " + err
         );
       }
 
@@ -687,8 +688,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       gl.activeTexture(gl.TEXTURE0);
 
       if (WebGLFrameSink.stripe) {
-        var uploadTemp = !textures[name + '_temp'];
-        var tempTexture = createOrReuseTexture(name + '_temp');
+        var uploadTemp = !textures[name + "_temp"];
+        var tempTexture = createOrReuseTexture(name + "_temp");
         gl.bindTexture(gl.TEXTURE_2D, tempTexture);
         if (uploadTemp) {
           // new texture
@@ -722,10 +723,10 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
           );
         }
 
-        var stripeTexture = textures[name + '_stripe'];
+        var stripeTexture = textures[name + "_stripe"];
         var uploadStripe = !stripeTexture;
         if (uploadStripe) {
-          stripeTexture = createOrReuseTexture(name + '_stripe');
+          stripeTexture = createOrReuseTexture(name + "_stripe");
         }
         gl.bindTexture(gl.TEXTURE_2D, stripeTexture);
         if (uploadStripe) {
@@ -805,12 +806,12 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         0
       );
 
-      var tempTexture = textures[name + '_temp'];
+      var tempTexture = textures[name + "_temp"];
       gl.activeTexture(gl.TEXTURE1);
       gl.bindTexture(gl.TEXTURE_2D, tempTexture);
       gl.uniform1i(unpackTextureLocation, 1);
 
-      var stripeTexture = textures[name + '_stripe'];
+      var stripeTexture = textures[name + "_stripe"];
       gl.activeTexture(gl.TEXTURE2);
       gl.bindTexture(gl.TEXTURE_2D, stripeTexture);
       gl.uniform1i(stripeLocation, 2);
@@ -881,7 +882,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
         var err = gl.getProgramInfoLog(program);
         gl.deleteProgram(program);
-        throw new Error('GL program linking failed: ' + err);
+        throw new Error("GL program linking failed: " + err);
       }
 
       return program;
@@ -895,7 +896,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         );
         unpackPositionLocation = gl.getAttribLocation(
           unpackProgram,
-          'aPosition'
+          "aPosition"
         );
 
         unpackTexturePositionBuffer = gl.createBuffer();
@@ -918,12 +919,12 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
         unpackTexturePositionLocation = gl.getAttribLocation(
           unpackProgram,
-          'aTexturePosition'
+          "aTexturePosition"
         );
-        stripeLocation = gl.getUniformLocation(unpackProgram, 'uStripe');
+        stripeLocation = gl.getUniformLocation(unpackProgram, "uStripe");
         unpackTextureLocation = gl.getUniformLocation(
           unpackProgram,
-          'uTexture'
+          "uTexture"
         );
       }
       program = initProgram(shaders.vertex, shaders.fragment);
@@ -932,11 +933,11 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       gl.bindBuffer(gl.ARRAY_BUFFER, buf);
       gl.bufferData(gl.ARRAY_BUFFER, rectangle, gl.STATIC_DRAW);
 
-      positionLocation = gl.getAttribLocation(program, 'aPosition');
+      positionLocation = gl.getAttribLocation(program, "aPosition");
       lumaPositionBuffer = gl.createBuffer();
-      lumaPositionLocation = gl.getAttribLocation(program, 'aLumaPosition');
+      lumaPositionLocation = gl.getAttribLocation(program, "aLumaPosition");
       chromaPositionBuffer = gl.createBuffer();
-      chromaPositionLocation = gl.getAttribLocation(program, 'aChromaPosition');
+      chromaPositionLocation = gl.getAttribLocation(program, "aChromaPosition");
     }
 
     function setRectangle(format) {
@@ -946,9 +947,10 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       var height = format.height;
       var ratio = width / height;
       var displayRatio = displayWidth / displayHeight;
+      var times = 2;
       if (ratio > displayRatio) {
         var realHeight = displayWidth / ratio;
-        var y = (displayHeight - realHeight) / displayHeight - 1;
+        var y = -realHeight / displayHeight;
         rectangle = new Float32Array([
           // First triangle (top left, clockwise)
           -1.0,
@@ -968,7 +970,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         ]);
       } else {
         var realWidth = displayHeight * ratio;
-        var x = (displayWidth - realWidth) / displayWidth - 1;
+        var x = -realWidth / displayWidth;
         rectangle = new Float32Array([
           // First triangle (top left, clockwise)
           x,
@@ -993,7 +995,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
      * Actually draw a frame.
      * @param {YUVFrame} buffer - YUV frame buffer object
      */
-    self.drawFrame = function(buffer) {
+    self.drawFrame = function (buffer) {
       var format = buffer.format;
 
       var formatUpdate =
@@ -1007,14 +1009,16 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         self.clear();
       }
 
-      setRectangle(format);
+      if (!options.autoScale) {
+        setRectangle(format);
+      }
 
       if (!program) {
         init();
       }
 
       if (formatUpdate) {
-        var setupTexturePosition = function(buffer, location, texWidth) {
+        var setupTexturePosition = function (buffer, location, texWidth) {
           // Warning: assumes that the stride for Cb and Cr is the same size in output pixels
           var textureX0 = format.cropLeft / texWidth;
           var textureX1 = (format.cropLeft + format.cropWidth) / texWidth;
@@ -1052,19 +1056,19 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
       // Create or update the textures...
       uploadTexture(
-        'uTextureY',
+        "uTextureY",
         buffer.y.stride,
         format.height,
         buffer.y.bytes
       );
       uploadTexture(
-        'uTextureCb',
+        "uTextureCb",
         buffer.u.stride,
         format.chromaHeight,
         buffer.u.bytes
       );
       uploadTexture(
-        'uTextureCr',
+        "uTextureCr",
         buffer.v.stride,
         format.chromaHeight,
         buffer.v.bytes
@@ -1072,18 +1076,18 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
       if (WebGLFrameSink.stripe) {
         // Unpack the textures after upload to avoid blocking on GPU
-        unpackTexture('uTextureY', buffer.y.stride, format.height);
-        unpackTexture('uTextureCb', buffer.u.stride, format.chromaHeight);
-        unpackTexture('uTextureCr', buffer.v.stride, format.chromaHeight);
+        unpackTexture("uTextureY", buffer.y.stride, format.height);
+        unpackTexture("uTextureCb", buffer.u.stride, format.chromaHeight);
+        unpackTexture("uTextureCr", buffer.v.stride, format.chromaHeight);
       }
 
       // Set up the rectangle and draw it
       gl.useProgram(program);
       gl.viewport(0, 0, canvas.width, canvas.height);
 
-      attachTexture('uTextureY', gl.TEXTURE0, 0);
-      attachTexture('uTextureCb', gl.TEXTURE1, 1);
-      attachTexture('uTextureCr', gl.TEXTURE2, 2);
+      attachTexture("uTextureY", gl.TEXTURE0, 0);
+      attachTexture("uTextureCb", gl.TEXTURE1, 1);
+      attachTexture("uTextureCr", gl.TEXTURE2, 2);
 
       // Set up geometry
       gl.bindBuffer(gl.ARRAY_BUFFER, buf);
@@ -1103,9 +1107,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       gl.drawArrays(gl.TRIANGLES, 0, rectangle.length / 2);
     };
 
-    self.clear = function() {
+    self.clear = function () {
       gl.viewport(0, 0, canvas.width, canvas.height);
-      gl.clearColor(0.0, 0.0, 0.0, 0.0);
+      gl.clearColor(0.0, 0.0, 0.0, 1.0);
       gl.clear(gl.COLOR_BUFFER_BIT);
     };
 
@@ -1119,26 +1123,26 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
   //
   // This seems to affect all browsers on Windows, probably due to fun
   // mismatches between GL and D3D.
-  WebGLFrameSink.stripe = (function() {
-    if (navigator.userAgent.indexOf('Windows') !== -1) {
-      return true;
-    }
+  WebGLFrameSink.stripe = (function () {
+    // if (navigator.userAgent.indexOf("Windows") !== -1) {
+    // return true;
+    // }
     return false;
   })();
 
-  WebGLFrameSink.contextForCanvas = function(canvas) {
+  WebGLFrameSink.contextForCanvas = function (canvas) {
     var options = {
       // Don't trigger discrete GPU in multi-GPU systems
       preferLowPowerToHighPerformance: true,
-      powerPreference: 'low-power',
+      powerPreference: "low-power",
       // Don't try to use software GL rendering!
       failIfMajorPerformanceCaveat: true,
       // In case we need to capture the resulting output.
       preserveDrawingBuffer: true
     };
     return (
-      canvas.getContext('webgl', options) ||
-      canvas.getContext('experimental-webgl', options)
+      canvas.getContext("webgl", options) ||
+      canvas.getContext("experimental-webgl", options)
     );
   };
 
@@ -1147,8 +1151,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
    *
    * @returns {boolean} - true if available
    */
-  WebGLFrameSink.isAvailable = function() {
-    var canvas = document.createElement('canvas'),
+  WebGLFrameSink.isAvailable = function () {
+    var canvas = document.createElement("canvas"),
       gl;
     canvas.width = 1;
     canvas.height = 1;
